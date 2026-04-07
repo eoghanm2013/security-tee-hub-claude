@@ -32,7 +32,9 @@ docs/**
 !docs/
 !docs/*/
 !docs/**/patterns.md
-reference/
+!docs/reference/
+!docs/reference/*
+/reference/
 
 # ============================================
 # SYSTEM & IDE
