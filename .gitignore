@@ -1,0 +1,78 @@
+# ============================================
+# SECRETS & CREDENTIALS (NEVER COMMIT)
+# ============================================
+.env
+.env.local
+.env.*.local
+
+# MCP config contains tokens - use .example template
+.mcp.json
+
+# ============================================
+# SENSITIVE DATA
+# ============================================
+# Watcher state contains ticket metadata and customer info
+.watcher_state.json
+
+# Archived tickets contain customer data
+archive/
+
+# Active investigations may contain sensitive info
+# Keep .template, ignore actual investigations
+investigations/SCRS-*
+investigations/ZD-*
+investigations/CONS-*
+
+# Assets (flares, logs, screenshots)
+investigations/**/assets/*
+!investigations/**/assets/.gitkeep
+
+# Internal documentation (Datadog-specific)
+docs/**
+!docs/
+!docs/*/
+!docs/**/patterns.md
+reference/
+
+# ============================================
+# SYSTEM & IDE
+# ============================================
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+
+# Node (if web app is built)
+node_modules/
+.next/
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# Claude Code session state (personal, not for sharing)
+.claude/settings.json
+.claude/settings.local.json
+
+# Investigation artifacts with customer references
+memory-test-results.txt
+
+# ============================================
+# KEEP THESE (templates & examples)
+# ============================================
+!.env.example
+!.mcp.json.example
+!investigations/.template/
+!archive/.gitkeep

@@ -1,0 +1,4 @@
+runtime_security_config:
+  enabled: false
+  activity_dump:
+    enabled: false

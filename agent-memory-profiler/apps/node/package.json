@@ -1,0 +1,12 @@
+{
+  "name": "security-profiler-node",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "express": "^4.18.0",
+    "dd-trace": "^5.0.0"
+  },
+  "scripts": {
+    "start": "node --require dd-trace/init app.js"
+  }
+}

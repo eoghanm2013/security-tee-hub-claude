@@ -1,0 +1,82 @@
+{
+  "agent_features": [
+    {
+      "id": "cws",
+      "name": "Workload Protection (CWS)",
+      "product": "Threat Management",
+      "description": "eBPF-based process, file, and network monitoring for runtime threat detection",
+      "agent_config": {
+        "runtime_security_config.enabled": true,
+        "runtime_security_config.activity_dump.enabled": true
+      },
+      "system_probe_config": {
+        "runtime_security_config.enabled": true,
+        "runtime_security_config.activity_dump.enabled": true
+      },
+      "env_overrides": {
+        "DD_RUNTIME_SECURITY_CONFIG_ENABLED": "true",
+        "DD_SYSTEM_PROBE_ENABLED": "true"
+      }
+    },
+    {
+      "id": "sbom_host",
+      "name": "VM: Host SBOM",
+      "product": "Cloud Security",
+      "description": "Scans host OS packages for known vulnerabilities (CVEs)",
+      "agent_config": {
+        "sbom.enabled": true,
+        "sbom.host.enabled": true
+      },
+      "system_probe_config": {},
+      "env_overrides": {}
+    },
+    {
+      "id": "sbom_containers",
+      "name": "VM: Container Image SBOM",
+      "product": "Cloud Security",
+      "description": "Scans container images for packages and known vulnerabilities",
+      "agent_config": {
+        "sbom.enabled": true,
+        "sbom.container_image.enabled": true
+      },
+      "system_probe_config": {},
+      "env_overrides": {}
+    },
+    {
+      "id": "cspm",
+      "name": "CSPM: Compliance Benchmarks",
+      "product": "Cloud Security",
+      "description": "CIS benchmark and host compliance checks for misconfiguration detection",
+      "agent_config": {
+        "compliance_config.enabled": true,
+        "compliance_config.host_benchmarks.enabled": true
+      },
+      "system_probe_config": {},
+      "env_overrides": {}
+    }
+  ],
+  "tracer_features": [
+    {
+      "id": "aap",
+      "name": "AAP (App & API Protection)",
+      "product": "Threat Management",
+      "description": "In-App WAF for detecting injection attacks, account takeover, and application abuse",
+      "env_var": "DD_APPSEC_ENABLED"
+    },
+    {
+      "id": "iast",
+      "name": "IAST",
+      "product": "Code Security",
+      "description": "Source-to-sink taint tracking to find exploitable code paths in live traffic",
+      "env_var": "DD_IAST_ENABLED"
+    },
+    {
+      "id": "sca",
+      "name": "SCA Runtime",
+      "product": "Code Security",
+      "description": "Runtime detection of vulnerable third-party dependencies loaded by the application",
+      "env_var": "DD_APPSEC_SCA_ENABLED"
+    }
+  ],
+  "tracers": ["python", "node", "java", "php"]
+}

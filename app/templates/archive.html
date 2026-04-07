@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Archive - TEE Hub{% endblock %}
+
+{% block content %}
+<style>
+    .area-badge {
+        font-size: 10px; font-weight: 700; letter-spacing: 0.03em;
+        padding: 1px 6px; border-radius: 2px; white-space: nowrap;
+        border: 1px solid;
+    }
+    .area-badge-siem { background: #E8D8F0; color: #6B3FA0; border-color: #B090D0; }
+    .area-badge-aap { background: #D0E8FF; color: #004488; border-color: #6AA8D8; }
+    .area-badge-workload_protection { background: #FFF3CD; color: #8A6500; border-color: #D4A84A; }
+    .area-badge-cspm { background: #D4EDDA; color: #1E6D38; border-color: #7BB992; }
+    .area-badge-vm { background: #F8D7DA; color: #8B2E35; border-color: #E0A0A8; }
+    .area-badge-ciem { background: #D0F0F0; color: #006060; border-color: #80C8C8; }
+    .area-badge-sast { background: #D0ECFF; color: #005588; border-color: #80C0E8; }
+    .area-badge-sca { background: #DDD8F0; color: #3F3080; border-color: #A090D0; }
+    .area-badge-iast { background: #E8D0F0; color: #5A2880; border-color: #C090E0; }
+    .area-badge-other { background: #E8ECF0; color: #5A6A7A; border-color: #B0BAC8; }
+</style>
+
+<div class="p-6 max-w-6xl mx-auto animate-in">
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h1 class="text-xl font-bold" style="color: #1A202C;">Archive</h1>
+            <p class="text-dd-text-dim mt-0.5 text-xs" id="archive-count">{{ months|sum(attribute='count') }} archived tickets across {{ months|length }} month{{ 's' if months|length != 1 }}</p>
+        </div>
+        <div class="flex items-center gap-1">
+            <button onclick="setView('month')" data-view-btn="month" class="btn-y2k text-[11px] py-0.5 px-2 active">By Month</button>
+            <button onclick="setView('area')" data-view-btn="area" class="btn-y2k text-[11px] py-0.5 px-2">By Product Area</button>
+        </div>
+    </div>
+
+    <style>
+        [data-view-btn].active { border-style: inset; background: linear-gradient(180deg, #D0D8E4 0%, #E8EEF4 100%); font-weight: 700; }
+        .area-filter-btn.active { border-style: inset; background: linear-gradient(180deg, #D0D8E4 0%, #E8EEF4 100%); font-weight: 700; }
+    </style>
+
+    {% if months %}
+    <!-- Filter Toolbar -->
+    <div class="toolbar mb-4 flex flex-wrap items-center gap-2" style="border: 1px solid var(--c-border); border-radius: 3px;">
+        <span class="text-[10px] font-bold text-dd-text-dim uppercase mr-0.5">Filter:</span>
+        <button onclick="filterArea('all')" data-area-filter="all" class="area-filter-btn btn-y2k text-[11px] py-0.5 px-2 active">All</button>
+        {% for area_key in area_order %}
+        <button onclick="filterArea('{{ area_key }}')" data-area-filter="{{ area_key }}" class="area-filter-btn btn-y2k text-[11px] py-0.5 px-2">{{ area_labels[area_key] }}</button>
+        {% endfor %}
+    </div>
+
+    <!-- BY-MONTH VIEW -->
+    <div id="view-month" class="space-y-3">
+        {% for month in months %}
+        <div class="card overflow-hidden month-card">
+            <div class="win-titlebar flex items-center justify-between cursor-pointer" onclick="toggleMonth('month-{{ loop.index }}')">
+                <div class="flex items-center gap-2">
+                    <span id="toggle-month-{{ loop.index }}">{{ '-' if loop.first else '+' }}</span>
+                    <span>{{ month.name }}</span>
+                </div>
+                <span class="badge month-count" data-total="{{ month.count }}" style="background: rgba(255,255,255,0.2); color: #FFF; border-color: rgba(255,255,255,0.3); font-size: 10px;">{{ month.count }}</span>
+            </div>
+            <div id="month-{{ loop.index }}" class="{{ '' if loop.first else 'hidden' }}">
+                {% for ticket in month.tickets %}
+                <a href="/archive/{{ month.name }}/{{ ticket.key }}"
+                   class="archive-ticket-row alt-row block px-4 py-2 group"
+                   data-area="{{ ticket.product_area }}"
+                   style="border-bottom: 1px solid #D0D8E4; text-decoration: none; color: inherit;">
+                    <div class="flex items-center gap-3">
+                        <span class="text-[12px] font-mono font-bold flex-shrink-0" style="color: #006699;">{{ ticket.key }}</span>
+                        <span class="area-badge area-badge-{{ ticket.product_area }}">{{ area_labels[ticket.product_area] }}</span>
+                        <span class="text-[12px] text-dd-text-muted truncate">{{ ticket.title }}</span>
+                        <span class="text-dd-text-dim ml-auto group-hover:text-[#006699] flex-shrink-0">&rsaquo;</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- BY-PRODUCT-AREA VIEW -->
+    <div id="view-area" class="space-y-3 hidden">
+        {% for area_key in area_order %}
+        {% set area_tickets = [] %}
+        {% for month in months %}
+            {% for ticket in month.tickets %}
+                {% if ticket.product_area == area_key %}
+                    {% if area_tickets.append({"key": ticket.key, "title": ticket.title, "month": month.name}) %}{% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+        {% if area_tickets %}
+        <div class="card overflow-hidden area-group-card" data-area-group="{{ area_key }}">
+            <div class="win-titlebar flex items-center justify-between cursor-pointer" onclick="toggleArea('area-group-{{ area_key }}')">
+                <div class="flex items-center gap-2">
+                    <span id="toggle-area-group-{{ area_key }}">-</span>
+                    <span>{{ area_labels[area_key] }}</span>
+                </div>
+                <span class="badge" style="background: rgba(255,255,255,0.2); color: #FFF; border-color: rgba(255,255,255,0.3); font-size: 10px;">{{ area_tickets|length }}</span>
+            </div>
+            <div id="area-group-{{ area_key }}">
+                {% for ticket in area_tickets %}
+                <a href="/archive/{{ ticket.month }}/{{ ticket.key }}" class="alt-row block px-4 py-2 group" style="border-bottom: 1px solid #D0D8E4; text-decoration: none; color: inherit;">
+                    <div class="flex items-center gap-3">
+                        <span class="text-[12px] font-mono font-bold flex-shrink-0" style="color: #006699;">{{ ticket.key }}</span>
+                        <span class="text-[12px] text-dd-text-muted truncate">{{ ticket.title }}</span>
+                        <span class="text-[11px] text-dd-text-dim ml-auto flex-shrink-0">{{ ticket.month }}</span>
+                        <span class="text-dd-text-dim group-hover:text-[#006699] flex-shrink-0">&rsaquo;</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <div id="empty-filter" class="hidden text-center py-12">
+        <p class="text-xs font-bold" style="color: #1A202C;">No tickets match this filter</p>
+        <p class="text-[11px] text-dd-text-dim mt-1">Try selecting a different product area.</p>
+    </div>
+
+    {% else %}
+    <div class="text-center py-16">
+        <p class="text-xs font-bold" style="color: #1A202C;">No archived tickets</p>
+        <p class="text-[11px] text-dd-text-dim mt-1">Use <code style="color: #006699;">python scripts/bulk_archive.py</code> to archive JIRA tickets.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    let currentView = 'month';
+    let activeArea = 'all';
+
+    function setView(view) {
+        currentView = view;
+        document.querySelectorAll('[data-view-btn]').forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-view-btn="${view}"]`).classList.add('active');
+        document.getElementById('view-month').classList.toggle('hidden', view !== 'month');
+        document.getElementById('view-area').classList.toggle('hidden', view !== 'area');
+        applyAreaFilter();
+    }
+    function filterArea(area) {
+        activeArea = area;
+        document.querySelectorAll('.area-filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-area-filter="${area}"]`).classList.add('active');
+        applyAreaFilter();
+    }
+    function applyAreaFilter() {
+        if (currentView === 'month') {
+            let totalVisible = 0;
+            document.querySelectorAll('.month-card').forEach(card => {
+                const rows = card.querySelectorAll('.archive-ticket-row');
+                let monthVisible = 0;
+                rows.forEach(row => {
+                    const show = activeArea === 'all' || row.dataset.area === activeArea;
+                    row.style.display = show ? '' : 'none';
+                    if (show) monthVisible++;
+                });
+                card.style.display = monthVisible > 0 ? '' : 'none';
+                const countEl = card.querySelector('.month-count');
+                if (countEl) {
+                    const total = parseInt(countEl.dataset.total);
+                    countEl.textContent = activeArea === 'all' ? total : `${monthVisible}/${total}`;
+                }
+                totalVisible += monthVisible;
+            });
+            document.getElementById('empty-filter').classList.toggle('hidden', totalVisible > 0);
+            document.getElementById('view-month').classList.toggle('hidden', totalVisible === 0);
+        } else {
+            let totalVisible = 0;
+            document.querySelectorAll('.area-group-card').forEach(card => {
+                const show = activeArea === 'all' || card.dataset.areaGroup === activeArea;
+                card.style.display = show ? '' : 'none';
+                if (show) totalVisible++;
+            });
+            document.getElementById('empty-filter').classList.toggle('hidden', totalVisible > 0);
+            document.getElementById('view-area').classList.toggle('hidden', totalVisible === 0);
+        }
+    }
+    function toggleMonth(id) {
+        const el = document.getElementById(id);
+        const toggle = document.getElementById('toggle-' + id);
+        el.classList.toggle('hidden');
+        toggle.textContent = el.classList.contains('hidden') ? '+' : '-';
+    }
+    function toggleArea(id) {
+        const el = document.getElementById(id);
+        const toggle = document.getElementById('toggle-' + id);
+        el.classList.toggle('hidden');
+        toggle.textContent = el.classList.contains('hidden') ? '+' : '-';
+    }
+</script>
+{% endblock %}

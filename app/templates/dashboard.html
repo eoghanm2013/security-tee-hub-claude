@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - TEE Hub{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-6xl mx-auto animate-in">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-xl font-bold" style="color: #1A202C;">Dashboard</h1>
+        <p class="text-dd-text-dim mt-0.5 text-xs">Security TEE investigation workspace</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="card stat-purple p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded flex items-center justify-center" style="background: linear-gradient(180deg, #2A5FAA 0%, #1B3F8B 100%); border: 1px outset #4A7FCA;">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold tabular-nums" style="color: #1B3F8B;">{{ investigations|length }}</div>
+                    <div class="text-xs text-dd-text-dim font-bold">Active Investigations</div>
+                </div>
+            </div>
+        </div>
+        <div class="card stat-green p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded flex items-center justify-center" style="background: linear-gradient(180deg, #3CA06A 0%, #2E8B57 100%); border: 1px outset #4CB87A;">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold tabular-nums" style="color: #2E8B57;">{{ total_archived }}</div>
+                    <div class="text-xs text-dd-text-dim font-bold">Archived Tickets</div>
+                </div>
+            </div>
+        </div>
+        <div class="card stat-blue p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded flex items-center justify-center" style="background: linear-gradient(180deg, #2080CC 0%, #0066AA 100%); border: 1px outset #40A0E0;">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold tabular-nums" style="color: #0066AA;">{{ archive_months|length }}</div>
+                    <div class="text-xs text-dd-text-dim font-bold">Archive Months</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Active Investigations -->
+        <div class="lg:col-span-2">
+            <div class="card overflow-hidden">
+                <div class="win-titlebar flex items-center justify-between">
+                    <span>Active Investigations</span>
+                    <a href="/investigations" class="text-[11px] font-normal text-white underline hover:no-underline" style="text-shadow: none;">View all &raquo;</a>
+                </div>
+                <div>
+                    {% for inv in investigations[:10] %}
+                    <a href="/investigation/{{ inv.key }}" class="alt-row block px-4 py-2.5 group" style="border-bottom: 1px solid #D0D8E4;">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[12px] font-mono font-bold" style="color: #006699;">{{ inv.key }}</span>
+                                    <span class="w-2 h-2 flex-shrink-0" style="
+                                        {% if inv.status == 'investigating' %}background: #0054A6;
+                                        {% elif inv.status == 'waiting' %}background: #CC8800;
+                                        {% elif inv.status == 'escalated' %}background: #0066CC;
+                                        {% elif inv.status == 'done' %}background: #2E8B57;
+                                        {% endif %}" title="{{ inv.status|capitalize }}"></span>
+                                    {% if inv.has_response %}
+                                    <span class="badge badge-green">response</span>
+                                    {% endif %}
+                                    {% if inv.has_notes and not inv.has_response %}
+                                    <span class="badge badge-blue">notes</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-[12px] text-dd-text-muted mt-0.5 truncate">{{ inv.title }}</div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                {% if inv.assignee %}
+                                <span class="text-[10px] text-dd-text-dim">{{ inv.assignee }}</span>
+                                {% endif %}
+                                {% if inv.last_modified %}
+                                <span class="text-[11px] text-dd-text-dim tabular-nums">{{ inv.last_modified.strftime('%b %d') }}</span>
+                                {% endif %}
+                                <span class="text-dd-text-dim group-hover:text-[#006699] text-xs">&rsaquo;</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                    {% if not investigations %}
+                    <div class="px-4 py-8 text-center">
+                        <p class="text-xs text-dd-text-muted font-bold">No active investigations</p>
+                        <p class="text-[11px] text-dd-text-dim mt-1">Create a folder in <code style="color: #006699;">investigations/</code> to get started.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Archive + Quick Links -->
+        <div class="space-y-4">
+            <!-- Archive -->
+            <div class="card overflow-hidden">
+                <div class="win-titlebar flex items-center justify-between">
+                    <span>Archive</span>
+                    <a href="/archive" class="text-[11px] font-normal text-white underline hover:no-underline" style="text-shadow: none;">View all &raquo;</a>
+                </div>
+                <div>
+                    {% for month in archive_months[:5] %}
+                    <div class="px-4 py-2.5" style="border-bottom: 1px solid #D0D8E4;">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[12px] font-bold" style="color: #1A202C;">{{ month.name }}</span>
+                            <span class="badge badge-dim">{{ month.count }}</span>
+                        </div>
+                        <div class="space-y-0.5">
+                            {% for ticket in month.tickets[:4] %}
+                            <a href="/archive/{{ month.name }}/{{ ticket.key }}"
+                               class="flex items-center gap-2 py-0.5 group/ticket">
+                                <span class="text-[11px] font-mono font-bold" style="color: #006699;">{{ ticket.key }}</span>
+                                <span class="text-[11px] text-dd-text-dim group-hover/ticket:text-dd-text-muted truncate">{{ ticket.title }}</span>
+                            </a>
+                            {% endfor %}
+                            {% if month.tickets|length > 4 %}
+                            <span class="text-[11px] text-dd-text-dim">+{{ month.tickets|length - 4 }} more</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not archive_months %}
+                    <div class="px-4 py-6 text-center text-dd-text-dim text-[11px]">
+                        No archived tickets yet.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card overflow-hidden">
+                <div class="win-titlebar">Quick Links</div>
+                <div class="p-3 space-y-1">
+                    <a href="https://datadoghq.atlassian.net/jira/software/c/projects/SCRS/board" target="_blank"
+                       class="flex items-center gap-2 px-2 py-1.5 text-[12px] rounded hover:bg-[#E4EDF8] group" style="color: #006699; text-decoration: underline;">
+                        <svg class="w-4 h-4 flex-shrink-0" style="color: #0066CC;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/></svg>
+                        SCRS Board
+                        <svg class="w-3 h-3 ml-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                    <a href="/docs" class="flex items-center gap-2 px-2 py-1.5 text-[12px] rounded hover:bg-[#E4EDF8]" style="color: #006699; text-decoration: underline;">
+                        <svg class="w-4 h-4 flex-shrink-0" style="color: #CC8800;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        Internal Docs
+                    </a>
+                    <a href="/search" class="flex items-center gap-2 px-2 py-1.5 text-[12px] rounded hover:bg-[#E4EDF8]" style="color: #006699; text-decoration: underline;">
+                        <svg class="w-4 h-4 flex-shrink-0" style="color: #2E8B57;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        Search Everything
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

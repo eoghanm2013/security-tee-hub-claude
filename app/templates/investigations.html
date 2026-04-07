@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block title %}Investigations - TEE Hub{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-6xl mx-auto animate-in">
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h1 class="text-xl font-bold" style="color: #1A202C;">Investigations</h1>
+            <p class="text-dd-text-dim mt-0.5 text-xs" id="results-count">{{ investigations|length }} investigation{{ 's' if investigations|length != 1 }}</p>
+        </div>
+        <button onclick="runSync()" id="sync-btn" class="btn-y2k-blue inline-flex items-center gap-1.5 text-xs">
+            <svg id="sync-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Sync with JIRA
+        </button>
+    </div>
+
+    <!-- Sync Results Banner -->
+    <div id="sync-banner" class="hidden mb-4 card p-3" style="border-left: 4px solid #2E8B57;">
+        <div class="flex items-start justify-between">
+            <div id="sync-results" class="text-xs"></div>
+            <button onclick="document.getElementById('sync-banner').classList.add('hidden')" class="text-dd-text-dim hover:text-dd-text ml-3 flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+
+    {% if investigations %}
+    <!-- Filter Toolbar -->
+    <div class="toolbar mb-4 flex flex-wrap items-center gap-3" style="border: 1px solid var(--c-border); border-radius: 3px;">
+        <!-- Status Filter -->
+        <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold text-dd-text-dim uppercase mr-0.5">Status:</span>
+            <button onclick="filterStatus('all')" data-status-filter="all" class="status-filter-btn btn-y2k text-[11px] py-0.5 px-2 active" style="font-size: 11px;">All</button>
+            <button onclick="filterStatus('investigating')" data-status-filter="investigating" class="status-filter-btn btn-y2k text-[11px] py-0.5 px-2">
+                <span class="flex items-center gap-1"><span class="w-2 h-2" style="background: #0054A6;"></span>Investigating</span>
+            </button>
+            <button onclick="filterStatus('waiting')" data-status-filter="waiting" class="status-filter-btn btn-y2k text-[11px] py-0.5 px-2">
+                <span class="flex items-center gap-1"><span class="w-2 h-2" style="background: #CC8800;"></span>Waiting</span>
+            </button>
+            <button onclick="filterStatus('escalated')" data-status-filter="escalated" class="status-filter-btn btn-y2k text-[11px] py-0.5 px-2">
+                <span class="flex items-center gap-1"><span class="w-2 h-2" style="background: #0066CC;"></span>Escalated</span>
+            </button>
+            <button onclick="filterStatus('done')" data-status-filter="done" class="status-filter-btn btn-y2k text-[11px] py-0.5 px-2">
+                <span class="flex items-center gap-1"><span class="w-2 h-2" style="background: #2E8B57;"></span>Done</span>
+            </button>
+        </div>
+
+        {% if product_areas and product_areas|length > 1 %}
+        <div style="width: 1px; height: 20px; background: var(--c-border);"></div>
+
+        <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold text-dd-text-dim uppercase mr-0.5">Area:</span>
+            <button onclick="filterArea('all')" data-area-filter="all" class="area-filter-btn btn-y2k text-[11px] py-0.5 px-2 active">All</button>
+            {% for area in product_areas %}
+            <button onclick="filterArea('{{ area }}')" data-area-filter="{{ area }}" class="area-filter-btn btn-y2k text-[11px] py-0.5 px-2">{{ area_labels.get(area, area|capitalize) }}</button>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if assignees %}
+        <div style="width: 1px; height: 20px; background: var(--c-border);"></div>
+
+        <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold text-dd-text-dim uppercase mr-0.5">Assignee:</span>
+            <button onclick="filterAssignee('all')" data-assignee-filter="all" class="assignee-filter-btn btn-y2k text-[11px] py-0.5 px-2 active">All</button>
+            {% for a in assignees %}
+            <button onclick="filterAssignee('{{ a }}')" data-assignee-filter="{{ a }}" class="assignee-filter-btn btn-y2k text-[11px] py-0.5 px-2">{{ a }}</button>
+            {% endfor %}
+            <button onclick="filterAssignee('')" data-assignee-filter="" class="assignee-filter-btn btn-y2k text-[11px] py-0.5 px-2">Unassigned</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .btn-y2k.active { border-style: inset; background: linear-gradient(180deg, #D0D8E4 0%, #E8EEF4 100%); font-weight: 700; }
+    </style>
+
+    <!-- Investigation Table -->
+    <div class="card overflow-hidden" id="inv-grid">
+        <div class="win-titlebar">{{ investigations|length }} Investigation{{ 's' if investigations|length != 1 }}</div>
+        {% for inv in investigations %}
+        <a href="/investigation/{{ inv.key }}"
+           class="inv-card alt-row block px-4 py-2.5 group"
+           data-status="{{ inv.status }}"
+           data-assignee="{{ inv.assignee }}"
+           data-area="{{ inv.product_area }}"
+           style="border-bottom: 1px solid #D0D8E4; display: flex; text-decoration: none; color: inherit;">
+            <div class="flex items-center justify-between gap-3 w-full">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-[12px] font-mono font-bold" style="color: #006699;">{{ inv.key }}</span>
+                        <span class="w-2 h-2 flex-shrink-0" style="
+                            {% if inv.status == 'investigating' %}background: #0054A6;
+                            {% elif inv.status == 'waiting' %}background: #CC8800;
+                            {% elif inv.status == 'escalated' %}background: #0066CC;
+                            {% elif inv.status == 'done' %}background: #2E8B57;
+                            {% endif %}" title="{{ status_labels.get(inv.status, inv.status) }}"></span>
+                        {% if inv.product_area and inv.product_area != 'other' %}
+                        <span class="badge" style="
+                            {% if inv.product_area == 'siem' %}background: #E8D8F0; color: #6B3FA0; border-color: #B090D0;
+                            {% elif inv.product_area == 'aap' %}background: #D0E8FF; color: #004488; border-color: #6AA8D8;
+                            {% elif inv.product_area == 'workload_protection' %}background: #FFF3CD; color: #8A6500; border-color: #D4A84A;
+                            {% elif inv.product_area == 'cspm' %}background: #D4EDDA; color: #1E6D38; border-color: #7BB992;
+                            {% elif inv.product_area == 'vm' %}background: #F8D7DA; color: #8B2E35; border-color: #E0A0A8;
+                            {% elif inv.product_area == 'ciem' %}background: #D0F0F0; color: #006060; border-color: #80C8C8;
+                            {% elif inv.product_area == 'sast' %}background: #D0ECFF; color: #005588; border-color: #80C0E8;
+                            {% elif inv.product_area == 'sca' %}background: #DDD8F0; color: #3F3080; border-color: #A090D0;
+                            {% elif inv.product_area == 'iast' %}background: #E8D0F0; color: #5A2880; border-color: #C090E0;
+                            {% endif %}">{{ area_labels.get(inv.product_area, inv.product_area) }}</span>
+                        {% endif %}
+                        {% if inv.status == 'done' %}
+                        <span class="badge" style="background: #FFF3CD; color: #8A6500; border-color: #D4A84A;">ready to close</span>
+                        {% elif inv.has_response %}
+                        <span class="badge badge-green">response</span>
+                        {% elif inv.has_notes %}
+                        <span class="badge badge-blue">notes</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-[12px] text-dd-text-muted mt-0.5 truncate">{{ inv.title }}</div>
+                </div>
+                <div class="flex items-center gap-3 flex-shrink-0 text-[11px] text-dd-text-dim">
+                    {% if inv.assignee %}
+                    <span>{{ inv.assignee }}</span>
+                    {% endif %}
+                    {% if inv.last_modified %}
+                    <span class="tabular-nums">{{ inv.last_modified.strftime('%b %d') }}</span>
+                    {% endif %}
+                    <span class="text-dd-text-dim group-hover:text-[#006699]">&rsaquo;</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Empty filter state -->
+    <div id="empty-filter" class="hidden text-center py-12">
+        <p class="text-xs font-bold" style="color: #1A202C;">No matching investigations</p>
+        <p class="text-[11px] text-dd-text-dim mt-1">Try adjusting your filters.</p>
+    </div>
+
+    {% else %}
+    <div class="text-center py-16">
+        <p class="text-xs font-bold" style="color: #1A202C;">No active investigations</p>
+        <p class="text-[11px] text-dd-text-dim mt-1">Investigations will appear here when you create folders in <code style="color: #006699;">investigations/</code></p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    let activeStatus = 'all';
+    let activeAssignee = 'all';
+    let activeArea = 'all';
+
+    function filterStatus(status) {
+        activeStatus = status;
+        document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-status-filter="${status}"]`).classList.add('active');
+        applyFilters();
+    }
+
+    function filterAssignee(assignee) {
+        activeAssignee = assignee;
+        document.querySelectorAll('.assignee-filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-assignee-filter="${assignee}"]`).classList.add('active');
+        applyFilters();
+    }
+
+    function filterArea(area) {
+        activeArea = area;
+        document.querySelectorAll('.area-filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-area-filter="${area}"]`).classList.add('active');
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const cards = document.querySelectorAll('.inv-card');
+        let visible = 0;
+        cards.forEach(card => {
+            const status = card.dataset.status;
+            const assignee = card.dataset.assignee;
+            const area = card.dataset.area;
+            const statusMatch = activeStatus === 'all' || status === activeStatus;
+            const assigneeMatch = activeAssignee === 'all' || assignee === activeAssignee;
+            const areaMatch = activeArea === 'all' || area === activeArea;
+            const show = statusMatch && assigneeMatch && areaMatch;
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        const total = cards.length;
+        const countEl = document.getElementById('results-count');
+        const anyFilter = activeStatus !== 'all' || activeAssignee !== 'all' || activeArea !== 'all';
+        if (!anyFilter) {
+            countEl.textContent = `${total} investigation${total !== 1 ? 's' : ''}`;
+        } else {
+            countEl.textContent = `Showing ${visible} of ${total} investigation${total !== 1 ? 's' : ''}`;
+        }
+        document.getElementById('empty-filter').classList.toggle('hidden', visible > 0);
+        document.getElementById('inv-grid').classList.toggle('hidden', visible === 0);
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function renderTicketCard(t, isDone) {
+        const borderColor = isDone ? '#2E8B57' : '#CC8800';
+        let html = `<div style="border: 1px solid #B0C0D0; border-left: 3px solid ${borderColor}; background: #F8FAFC; padding: 6px 8px; margin-bottom: 6px; border-radius: 2px;">`;
+        html += `<div class="flex items-center gap-2 mb-1">`;
+        html += `<span class="font-mono text-[11px] font-bold" style="color: #006699;">${esc(t.key)}</span>`;
+        html += `<span class="badge" style="background: ${isDone ? '#D4EDDA' : '#FFF3CD'}; color: ${isDone ? '#1E6D38' : '#8A6500'}; border-color: ${isDone ? '#7BB992' : '#D4A84A'}; font-size: 10px;">${esc(t.jira_status)}</span>`;
+        if (t.assignees && t.assignees.length) html += `<span class="text-[10px] text-dd-text-dim ml-auto">${esc(t.assignees.join(', '))}</span>`;
+        html += `</div>`;
+        if (t.summary) html += `<div class="text-[11px] text-dd-text-muted mb-1">${esc(t.summary)}</div>`;
+        if (t.updated) html += `<div class="text-[10px] text-dd-text-dim mb-1">Updated ${esc(t.updated)}</div>`;
+        if (t.last_comments && t.last_comments.length > 0) {
+            html += `<div style="border-top: 1px solid #D0D8E4; padding-top: 4px; margin-top: 4px;">`;
+            t.last_comments.forEach(c => {
+                html += `<div class="text-[11px]"><b style="color: #4A5568;">${esc(c.author)}</b> <span class="text-dd-text-dim">${esc(c.date)}</span>`;
+                html += `<div class="text-dd-text-dim" style="max-height:50px;overflow:hidden">${esc(c.body)}</div></div>`;
+            });
+            html += `</div>`;
+        }
+        html += `</div>`;
+        return html;
+    }
+
+    function runSync() {
+        const btn = document.getElementById('sync-btn');
+        const banner = document.getElementById('sync-banner');
+        const resultsEl = document.getElementById('sync-results');
+        btn.disabled = true; btn.style.opacity = '0.6';
+        btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Checking JIRA...`;
+
+        fetch('/api/sync/preview').then(r => r.json()).then(preview => {
+            const doneCount = preview.would_archive ? preview.would_archive.length : 0;
+            if (doneCount === 0) {
+                banner.classList.remove('hidden');
+                banner.style.borderLeftColor = '#0066CC';
+                let html = `<div class="font-bold" style="color: #1A202C; margin-bottom: 6px;">All ${preview.checked} tickets still active in JIRA</div>`;
+                if (preview.still_active && preview.still_active.length > 0) preview.still_active.forEach(t => { html += renderTicketCard(t, false); });
+                resultsEl.innerHTML = html;
+                resetBtn(); return;
+            }
+            btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Archiving ${doneCount}...`;
+            fetch('/api/sync', { method: 'POST' }).then(r => r.json()).then(data => {
+                banner.classList.remove('hidden');
+                banner.style.borderLeftColor = '#2E8B57';
+                let html = '';
+                if (data.archived && data.archived.length > 0) {
+                    html += `<div class="font-bold" style="color: #1A202C; margin-bottom: 6px;">Archived ${data.archived.length} done ticket${data.archived.length !== 1 ? 's' : ''}</div>`;
+                    data.archived.forEach(t => { html += renderTicketCard(t, true); });
+                }
+                if (data.still_active && data.still_active.length > 0) {
+                    html += `<div class="font-bold" style="color: #1A202C; margin-top: 10px; margin-bottom: 6px;">${data.still_active.length} still active</div>`;
+                    data.still_active.forEach(t => { html += renderTicketCard(t, false); });
+                }
+                if (data.errors && data.errors.length > 0) {
+                    html += `<div style="color: #CC3333; margin-top: 8px;">`;
+                    data.errors.forEach(e => { html += `<div>${esc(e.key)}: ${esc(e.error)}</div>`; });
+                    html += `</div>`;
+                }
+                resultsEl.innerHTML = html;
+                resetBtn();
+                if (data.archived && data.archived.length > 0) setTimeout(() => location.reload(), 4000);
+            }).catch(err => { showError(err.message); resetBtn(); });
+        }).catch(err => { showError(err.message); resetBtn(); });
+
+        function showError(msg) {
+            banner.classList.remove('hidden');
+            banner.style.borderLeftColor = '#CC3333';
+            resultsEl.innerHTML = `<div style="color: #CC3333;">Could not reach JIRA: ${esc(msg)}</div>`;
+        }
+        function resetBtn() {
+            btn.disabled = false; btn.style.opacity = '1';
+            btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Sync with JIRA`;
+        }
+    }
+
+    (function() {
+        let evtSource = null;
+        function connect() {
+            if (evtSource) evtSource.close();
+            evtSource = new EventSource('/api/investigations/watch');
+            evtSource.onmessage = function(e) {
+                try {
+                    const evt = JSON.parse(e.data);
+                    if (evt.type === 'changed') setTimeout(() => location.reload(), 1000);
+                } catch (err) {}
+            };
+            evtSource.onerror = function() { evtSource.close(); setTimeout(connect, 5000); };
+        }
+        connect();
+        window.addEventListener('beforeunload', function() { if (evtSource) evtSource.close(); });
+    })();
+</script>
+{% endblock %}

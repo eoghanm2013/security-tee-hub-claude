@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ key }} - Archive - TEE Hub{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+    <!-- Toolbar Header -->
+    <div class="sticky top-0 z-10 toolbar" style="border-bottom: 2px solid var(--c-border);">
+        <div class="max-w-5xl mx-auto px-6 py-2">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 text-[12px]">
+                    <a href="/archive" class="text-dd-text-dim" style="text-decoration: underline;">Archive</a>
+                    <span class="text-dd-text-dim">&gt;</span>
+                    <a href="/archive" class="text-dd-text-dim" style="text-decoration: underline;">{{ month }}</a>
+                    <span class="text-dd-text-dim">&gt;</span>
+                    <span class="font-mono font-bold" style="color: #006699;">{{ key }}</span>
+                    {% if product_area and product_area != 'other' %}
+                    <span class="badge" style="
+                        {% if product_area == 'siem' %}background: #E8D8F0; color: #6B3FA0; border-color: #B090D0;
+                        {% elif product_area == 'aap' %}background: #D0E8FF; color: #004488; border-color: #6AA8D8;
+                        {% elif product_area == 'workload_protection' %}background: #FFF3CD; color: #8A6500; border-color: #D4A84A;
+                        {% elif product_area == 'cspm' %}background: #D4EDDA; color: #1E6D38; border-color: #7BB992;
+                        {% elif product_area == 'vm' %}background: #F8D7DA; color: #8B2E35; border-color: #E0A0A8;
+                        {% elif product_area == 'ciem' %}background: #D0F0F0; color: #006060; border-color: #80C8C8;
+                        {% elif product_area == 'sast' %}background: #D0ECFF; color: #005588; border-color: #80C0E8;
+                        {% elif product_area == 'sca' %}background: #DDD8F0; color: #3F3080; border-color: #A090D0;
+                        {% elif product_area == 'iast' %}background: #E8D0F0; color: #5A2880; border-color: #C090E0;
+                        {% endif %}">{{ area_label }}</span>
+                    {% endif %}
+                </div>
+                <a href="https://datadoghq.atlassian.net/browse/{{ key }}" target="_blank" class="btn-y2k inline-flex items-center gap-1 text-[11px]">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    Open in JIRA
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-6 py-5">
+        <div class="card overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-2" style="background: #ECF0F6; border-bottom: 1px solid #D0D8E4;">
+                <span class="text-[11px] text-dd-text-dim font-mono">{{ ticket.path }}</span>
+                <span class="text-[11px] text-dd-text-dim">{{ ticket.modified.strftime('%b %d, %Y') }}</span>
+            </div>
+            <div class="px-6 py-5 bg-white">
+                <div class="md-content max-w-none">{{ ticket.html|safe }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

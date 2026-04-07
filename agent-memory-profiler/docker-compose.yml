@@ -1,0 +1,132 @@
+services:
+  dd-agent:
+    image: gcr.io/datadoghq/agent:${DD_AGENT_VERSION:-latest}
+    container_name: secprofiler-agent
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_SITE=${DD_SITE:-datadoghq.com}
+      - DD_HOSTNAME=${DD_HOSTNAME:-security-memory-profiler}
+      - DD_TAGS=${DD_TAGS:-env:security-profiler team:support}
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+      - DD_SYSTEM_PROBE_ENABLED=${FEATURE_SYSTEM_PROBE:-false}
+      - DD_RUNTIME_SECURITY_CONFIG_ENABLED=${FEATURE_CWS:-false}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - ./configs/active.yaml:/etc/datadog-agent/datadog.yaml:ro
+      - ./configs/system-probe.yaml:/etc/datadog-agent/system-probe.yaml:ro
+    security_opt:
+      - apparmor:unconfined
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - SYS_PTRACE
+      - NET_ADMIN
+      - NET_BROADCAST
+      - IPC_LOCK
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+        reservations:
+          memory: 128m
+    ports:
+      - "8125:8125/udp"
+      - "8126:8126"
+
+  python-app:
+    build: ./apps/python
+    container_name: secprofiler-python
+    environment:
+      - DD_AGENT_HOST=dd-agent
+      - DD_TRACE_AGENT_PORT=8126
+      - DD_SERVICE=profiler-python
+      - DD_ENV=security-profiler
+      - DD_APPSEC_ENABLED=${TRACER_APPSEC:-false}
+      - DD_IAST_ENABLED=${TRACER_IAST:-false}
+      - DD_APPSEC_SCA_ENABLED=${TRACER_SCA:-false}
+    ports:
+      - "8081:8080"
+    depends_on:
+      - dd-agent
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    profiles:
+      - python
+      - tracer
+
+  node-app:
+    build: ./apps/node
+    container_name: secprofiler-node
+    environment:
+      - DD_AGENT_HOST=dd-agent
+      - DD_TRACE_AGENT_PORT=8126
+      - DD_SERVICE=profiler-node
+      - DD_ENV=security-profiler
+      - DD_APPSEC_ENABLED=${TRACER_APPSEC:-false}
+      - DD_IAST_ENABLED=${TRACER_IAST:-false}
+      - DD_APPSEC_SCA_ENABLED=${TRACER_SCA:-false}
+    ports:
+      - "8082:8080"
+    depends_on:
+      - dd-agent
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    profiles:
+      - node
+      - tracer
+
+  java-app:
+    build: ./apps/java
+    container_name: secprofiler-java
+    environment:
+      - DD_AGENT_HOST=dd-agent
+      - DD_TRACE_AGENT_PORT=8126
+      - DD_SERVICE=profiler-java
+      - DD_ENV=security-profiler
+      - DD_APPSEC_ENABLED=${TRACER_APPSEC:-false}
+      - DD_IAST_ENABLED=${TRACER_IAST:-false}
+      - DD_APPSEC_SCA_ENABLED=${TRACER_SCA:-false}
+    ports:
+      - "8083:8080"
+    depends_on:
+      - dd-agent
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    profiles:
+      - java
+      - tracer
+
+  php-app:
+    build: ./apps/php
+    container_name: secprofiler-php
+    environment:
+      - DD_AGENT_HOST=dd-agent
+      - DD_TRACE_AGENT_PORT=8126
+      - DD_SERVICE=profiler-php
+      - DD_ENV=security-profiler
+      - DD_APPSEC_ENABLED=${TRACER_APPSEC:-false}
+      - DD_IAST_ENABLED=${TRACER_IAST:-false}
+      - DD_APPSEC_SCA_ENABLED=${TRACER_SCA:-false}
+    ports:
+      - "8084:80"
+    depends_on:
+      - dd-agent
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    profiles:
+      - php
+      - tracer

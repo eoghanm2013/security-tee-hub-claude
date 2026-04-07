@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Docs - TEE Hub{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-5xl mx-auto animate-in">
+    <div class="mb-4">
+        <h1 class="text-xl font-bold" style="color: #1A202C;">Documentation</h1>
+        <p class="text-dd-text-dim mt-0.5 text-xs">Internal docs, runbooks, and troubleshooting guides</p>
+    </div>
+
+    <div class="card overflow-hidden">
+        <div class="win-titlebar">File Explorer</div>
+
+        {% macro render_tree(items, depth=0) %}
+        {% for item in items %}
+        {% if item.type == 'dir' %}
+        <div>
+            <div class="flex items-center gap-2 cursor-pointer hover:bg-[#E4EDF8] py-1.5 px-3"
+                 onclick="toggleDir('dir-{{ item.name }}-{{ depth }}')"
+                 style="padding-left: {{ 0.75 + depth * 1.25 }}rem; border-bottom: 1px solid #E0E6EE;">
+                <span id="toggle-dir-{{ item.name }}-{{ depth }}" class="text-[11px] font-mono text-dd-text-dim" style="width: 12px; text-align: center;">+</span>
+                <svg class="w-4 h-4 flex-shrink-0" style="color: #CC8800;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                <span class="text-[12px] font-bold capitalize" style="color: #1A202C;">{{ item.name }}</span>
+                <span class="text-[11px] text-dd-text-dim">({{ item.children|length }})</span>
+            </div>
+            <div id="dir-{{ item.name }}-{{ depth }}" class="hidden">
+                {{ render_tree(item.children, depth + 1) }}
+            </div>
+        </div>
+        {% elif item.type == 'file' %}
+        <a href="/docs/{{ item.path.replace('docs/', '') }}"
+           class="flex items-center gap-2 py-1.5 px-3 hover:bg-[#E4EDF8] group"
+           style="padding-left: {{ 0.75 + depth * 1.25 + 1.5 }}rem; border-bottom: 1px solid #E0E6EE; text-decoration: none; color: inherit;">
+            <svg class="w-4 h-4 text-dd-text-dim group-hover:text-[#006699] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            <span class="text-[12px] text-dd-text-muted group-hover:text-[#006699]">{{ item.name.replace('-', ' ').replace('_', ' ').title() }}</span>
+        </a>
+        {% endif %}
+        {% endfor %}
+        {% endmacro %}
+
+        {{ render_tree(tree) }}
+
+        {% if not tree %}
+        <div class="px-4 py-12 text-center">
+            <p class="text-xs font-bold" style="color: #1A202C;">No documentation files yet</p>
+            <p class="text-[11px] text-dd-text-dim mt-1">Add markdown files to <code style="color: #006699;">docs/</code> to see them here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function toggleDir(id) {
+        const el = document.getElementById(id);
+        const toggle = document.getElementById('toggle-' + id);
+        el.classList.toggle('hidden');
+        toggle.textContent = el.classList.contains('hidden') ? '+' : '-';
+    }
+</script>
+{% endblock %}

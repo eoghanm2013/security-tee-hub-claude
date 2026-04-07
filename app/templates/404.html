@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Not Found - TEE Hub{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center h-full">
+    <div class="text-center animate-in">
+        <div class="card overflow-hidden" style="max-width: 420px;">
+            <div class="win-titlebar flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                TEE Hub - Navigation Error
+            </div>
+            <div class="p-6 bg-white text-center">
+                <div class="text-5xl font-bold mb-3" style="color: #7F9DB9;">404</div>
+                <p class="text-[13px] font-bold mb-2" style="color: #1A202C;">The page cannot be displayed</p>
+                <p class="text-[12px] text-dd-text-dim mb-5">The file or investigation you requested was not found on this server.</p>
+                <div style="border-top: 1px solid #D0D8E4; padding-top: 12px;">
+                    <a href="/" class="btn-y2k-blue text-[12px] inline-flex items-center gap-1.5 px-4 py-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

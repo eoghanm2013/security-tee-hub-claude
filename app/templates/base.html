@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TEE Hub{% endblock %}</title>
+    <script>
+        (function() {
+            var t = localStorage.getItem('tee-theme');
+            if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dd-purple': 'var(--c-accent)',
+                        'dd-purple-light': 'var(--c-accent-light)',
+                        'dd-purple-dark': 'var(--c-accent-dark)',
+                        'dd-purple-glow': 'var(--c-accent-glow)',
+                        'dd-bg': 'var(--c-bg)',
+                        'dd-surface': 'var(--c-surface)',
+                        'dd-surface-2': 'var(--c-surface-2)',
+                        'dd-surface-3': 'var(--c-surface-3)',
+                        'dd-border': 'var(--c-border)',
+                        'dd-border-hover': 'var(--c-border-hover)',
+                        'dd-text': 'var(--c-text)',
+                        'dd-text-muted': 'var(--c-text-muted)',
+                        'dd-text-dim': 'var(--c-text-dim)',
+                        'dd-green': 'var(--c-green)',
+                        'dd-blue': 'var(--c-blue)',
+                        'dd-amber': 'var(--c-amber)',
+                        'dd-red': 'var(--c-red)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* ── Y2K Theme: XP Luna / Web 2.0 ──────────────────────────── */
+        :root {
+            --c-accent: #0054A6;
+            --c-accent-light: #0078D4;
+            --c-accent-dark: #003C75;
+            --c-accent-glow: rgba(0, 120, 212, 0.15);
+            --c-bg: #D6DDE5;
+            --c-surface: #FFFFFF;
+            --c-surface-2: #ECF0F6;
+            --c-surface-3: #E0E6EE;
+            --c-border: #7F9DB9;
+            --c-border-hover: #5A82A6;
+            --c-text: #1A1A2E;
+            --c-text-muted: #4A5568;
+            --c-text-dim: #808EA0;
+            --c-green: #2E8B57;
+            --c-blue: #0066CC;
+            --c-amber: #CC8800;
+            --c-red: #CC3333;
+            --c-teal: #008080;
+            /* Sidebar */
+            --sidebar-bg-from: #1B3F8B;
+            --sidebar-bg-to: #3A6BC5;
+            --sidebar-text: #FFFFFF;
+            --sidebar-text-muted: #B0C4E8;
+            --sidebar-active-bg: rgba(255, 255, 255, 0.15);
+            --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
+            --sidebar-border: rgba(255, 255, 255, 0.12);
+            /* Markdown */
+            --md-text: #2D3748;
+            --md-h1: #1A202C;
+            --md-h2: #1A202C;
+            --md-h3: #2D3748;
+            --md-h4: #4A5568;
+            --md-strong: #1A202C;
+            --md-link: #006699;
+            --md-link-hover: #004466;
+            --md-code-bg: #EDF2F7;
+            --md-code-text: #0054A6;
+            --md-pre-bg: #F7FAFC;
+            --md-pre-border: #B0C4D8;
+            --md-pre-text: #2D3748;
+            --md-th-bg: linear-gradient(180deg, #4A8BC2 0%, #3A6CA0 100%);
+            --md-th-bg-flat: #4A8BC2;
+            --md-th-text: #FFFFFF;
+            --md-td-border: #C4D5E8;
+            --md-tr-hover: #EDF4FA;
+            --md-blockquote-bg: #F0F5FA;
+            --md-blockquote-text: #4A5568;
+            /* Card / UI */
+            --card-bg: #FFFFFF;
+            --card-border: #7F9DB9;
+            --card-hover-border: #5A82A6;
+            --card-glow: rgba(0, 120, 212, 0.12);
+            --card-header-from: #4A8BC2;
+            --card-header-to: #3A6CA0;
+            --scrollbar-track: #D6DDE5;
+            --scrollbar-thumb: #A0B0C4;
+            --scrollbar-hover: #7F9DB9;
+            --mark-bg: #FFFACD;
+            --mark-text: #1A1A2E;
+            /* Buttons */
+            --btn-bg-from: #F0F0F0;
+            --btn-bg-to: #D8D8D8;
+            --btn-border-light: #FFFFFF;
+            --btn-border-dark: #808080;
+            --btn-text: #1A1A2E;
+        }
+        [data-theme="light"] {
+            --c-accent: #0054A6;
+            --c-accent-light: #0078D4;
+            --c-accent-dark: #003C75;
+            --c-accent-glow: rgba(0, 120, 212, 0.15);
+            --c-bg: #D6DDE5;
+            --c-surface: #FFFFFF;
+            --c-surface-2: #ECF0F6;
+            --c-surface-3: #E0E6EE;
+            --c-border: #7F9DB9;
+            --c-border-hover: #5A82A6;
+            --c-text: #1A1A2E;
+            --c-text-muted: #4A5568;
+            --c-text-dim: #808EA0;
+            --c-green: #2E8B57;
+            --c-blue: #0066CC;
+            --c-amber: #CC8800;
+            --c-red: #CC3333;
+        }
+    </style>
+    <style>
+        /* ── Base Reset & Font ──────────────────────────────────────── */
+        * { font-family: Tahoma, Verdana, 'Trebuchet MS', Geneva, sans-serif; }
+        code, pre, .font-mono, kbd { font-family: 'Lucida Console', 'Courier New', monospace !important; }
+
+        /* ── Typography & Markdown ──────────────────────────────────── */
+        .md-content { color: var(--md-text); font-size: 0.9rem; line-height: 1.75; }
+        .md-content h1 { font-size: 1.4rem; font-weight: 700; margin: 1.75rem 0 0.6rem; color: var(--md-h1); }
+        .md-content h1:first-child { margin-top: 0; }
+        .md-content h2 { font-size: 1.15rem; font-weight: 700; margin: 1.5rem 0 0.5rem; color: var(--md-h2); border-bottom: 2px solid var(--c-border); padding-bottom: 0.3rem; }
+        .md-content h3 { font-size: 1rem; font-weight: 700; margin: 1.25rem 0 0.4rem; color: var(--md-h3); }
+        .md-content h4 { font-size: 0.9rem; font-weight: 700; margin: 1rem 0 0.35rem; color: var(--md-h4); text-transform: uppercase; letter-spacing: 0.03em; }
+        .md-content p { margin: 0.5rem 0; }
+        .md-content ul, .md-content ol { margin: 0.5rem 0 0.5rem 1.5rem; }
+        .md-content li { margin: 0.25rem 0; line-height: 1.65; }
+        .md-content ul { list-style-type: disc; }
+        .md-content ol { list-style-type: decimal; }
+        .md-content a { color: var(--md-link); text-decoration: underline; }
+        .md-content a:hover { color: var(--md-link-hover); }
+        .md-content code {
+            background: var(--md-code-bg); padding: 0.1rem 0.4rem; border-radius: 2px;
+            font-size: 0.82rem; color: var(--md-code-text);
+            border: 1px solid #C4D5E8;
+        }
+        .md-content pre {
+            background: var(--md-pre-bg); padding: 1rem; border-radius: 3px; overflow-x: auto;
+            margin: 0.75rem 0; border: 2px inset #B0C0D0;
+        }
+        .md-content pre code { background: none; padding: 0; color: var(--md-pre-text); font-size: 0.82rem; border: none; }
+        .md-content table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; border: 1px solid var(--c-border); }
+        .md-content th {
+            background: var(--md-th-bg-flat); padding: 0.5rem 0.75rem; text-align: left;
+            border: 1px solid #3A6CA0; font-weight: 700; font-size: 0.8rem;
+            color: var(--md-th-text); text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .md-content td { padding: 0.45rem 0.75rem; border: 1px solid var(--md-td-border); font-size: 0.85rem; }
+        .md-content tr:nth-child(even) td { background: #F0F5FA; }
+        .md-content tr:hover td { background: var(--md-tr-hover); }
+        .md-content hr { border-color: var(--c-border); margin: 1.5rem 0; }
+        .md-content blockquote {
+            border-left: 3px solid var(--c-accent); padding: 0.5rem 0 0.5rem 1rem;
+            margin: 0.75rem 0; color: var(--md-blockquote-text); background: var(--md-blockquote-bg);
+            border-radius: 0 3px 3px 0;
+        }
+        .md-content strong { color: var(--md-strong); font-weight: 700; }
+        .md-content img { max-width: 100%; border: 2px solid var(--c-border); margin: 0.75rem 0; border-radius: 3px; }
+        .md-content .asset-img-link { display: block; text-decoration: none; cursor: zoom-in; }
+        .md-content .asset-embedded-img {
+            max-width: 100%; height: auto; display: block;
+            border: 2px solid var(--c-border); border-radius: 3px;
+            margin: 0.5rem 0; background: #F0F0F0;
+            box-shadow: 1px 2px 4px rgba(0,0,0,0.12);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .md-content .asset-img-link:hover .asset-embedded-img {
+            border-color: var(--c-accent-light);
+            box-shadow: 1px 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* ── Scrollbar (chunky Y2K style) ──────────────────────────── */
+        ::-webkit-scrollbar { width: 14px; height: 14px; }
+        ::-webkit-scrollbar-track { background: var(--scrollbar-track); border: 1px solid #B0B8C4; }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #C8D0DC 0%, #A0AABC 100%);
+            border: 1px outset #D0D8E4;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #B8C4D4 0%, #8898AC 100%); }
+        ::-webkit-scrollbar-button { display: block; height: 14px; background: linear-gradient(180deg, #E8ECF0 0%, #C4CCD4 100%); border: 1px outset #D8DCE4; }
+
+        /* ── Search highlight ───────────────────────────────────────── */
+        mark { background: var(--mark-bg); color: var(--mark-text); padding: 0 2px; border: 1px solid #E8D44D; }
+
+        /* ── Sidebar ────────────────────────────────────────────────── */
+        .sidebar-gradient {
+            background: linear-gradient(180deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
+        }
+        .sidebar-nav-item { position: relative; transition: background 0.1s ease; border-radius: 3px; }
+        .sidebar-nav-item::before { display: none; }
+        .sidebar-nav-item:hover { background: var(--sidebar-hover-bg); }
+        .sidebar-nav-item.active { background: var(--sidebar-active-bg); }
+
+        /* ── Cards (window-panel style) ────────────────────────────── */
+        .card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 3px; box-shadow: 1px 2px 4px rgba(0,0,0,0.15);
+            transition: box-shadow 0.15s ease;
+        }
+        .card:hover { border-color: var(--card-hover-border); box-shadow: 1px 2px 6px rgba(0,0,0,0.2); }
+        .card-glow:hover { box-shadow: 1px 2px 8px rgba(0,0,0,0.25); }
+        .card-header {
+            background: linear-gradient(180deg, var(--card-header-from) 0%, var(--card-header-to) 100%);
+            color: #FFFFFF; font-weight: 700; font-size: 0.8rem;
+            padding: 0.4rem 0.75rem; border-bottom: 1px solid #2A5A8A;
+            border-radius: 2px 2px 0 0;
+        }
+
+        /* ── Tabs (classic raised tab look) ────────────────────────── */
+        .tab-pill {
+            padding: 0.4rem 0.9rem; border-radius: 3px 3px 0 0; font-size: 0.8rem; font-weight: 600;
+            color: var(--c-text-muted); cursor: pointer;
+            border: 1px solid var(--c-border); border-bottom: 1px solid var(--c-border);
+            background: linear-gradient(180deg, #E8ECF2 0%, #D0D6E0 100%);
+            margin-bottom: -1px; position: relative;
+        }
+        .tab-pill:hover { color: var(--c-text); background: linear-gradient(180deg, #F0F4FA 0%, #E0E6EE 100%); }
+        .tab-pill.active {
+            color: var(--c-text); background: #FFFFFF; border-bottom-color: #FFFFFF;
+            box-shadow: none; font-weight: 700;
+        }
+
+        /* ── Badge ──────────────────────────────────────────────────── */
+        .badge {
+            display: inline-flex; align-items: center; padding: 0.1rem 0.45rem;
+            border-radius: 2px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.02em;
+            border: 1px solid;
+        }
+        .badge-purple { background: #E0E8F8; color: #1B3F8B; border-color: #7F9DB9; }
+        .badge-green { background: #D4EDDA; color: #1E6D38; border-color: #7BB992; }
+        .badge-blue { background: #D0E8FF; color: #004488; border-color: #6AA8D8; }
+        .badge-amber { background: #FFF3CD; color: #8A6500; border-color: #D4A84A; }
+        .badge-dim { background: #E8ECF0; color: #5A6A7A; border-color: #B0BAC8; }
+
+        /* ── Stat cards ────────────────────────────────────────────── */
+        .stat-purple { background: linear-gradient(180deg, #E8EEF8 0%, #D8E0F0 100%); border-left: 4px solid #1B3F8B; }
+        .stat-green { background: linear-gradient(180deg, #E8F5EE 0%, #D4EDDA 100%); border-left: 4px solid #2E8B57; }
+        .stat-blue { background: linear-gradient(180deg, #E0F0FF 0%, #D0E4F8 100%); border-left: 4px solid #0066CC; }
+
+        /* ── Buttons (3D raised look) ──────────────────────────────── */
+        .btn-y2k {
+            background: linear-gradient(180deg, var(--btn-bg-from) 0%, var(--btn-bg-to) 100%);
+            border: 2px outset #D8D8D8; color: var(--btn-text); font-weight: 600;
+            padding: 0.35rem 0.85rem; border-radius: 3px; font-size: 0.8rem;
+            cursor: pointer; transition: none;
+        }
+        .btn-y2k:hover { background: linear-gradient(180deg, #F8F8F8 0%, #E4E4E4 100%); }
+        .btn-y2k:active { border-style: inset; background: linear-gradient(180deg, #D0D0D0 0%, #E0E0E0 100%); }
+        .btn-y2k-blue {
+            background: linear-gradient(180deg, #4A9EE0 0%, #2A6EB0 100%);
+            border: 2px outset #5AAEE8; color: #FFFFFF; font-weight: 700;
+        }
+        .btn-y2k-blue:hover { background: linear-gradient(180deg, #5AAEE8 0%, #3A7EC0 100%); }
+        .btn-y2k-blue:active { border-style: inset; background: linear-gradient(180deg, #2A6EB0 0%, #4A9EE0 100%); }
+
+        /* ── Inputs (sunken field) ─────────────────────────────────── */
+        .input-y2k {
+            background: #FFFFFF; border: 2px inset #B0B8C4; border-radius: 2px;
+            padding: 0.35rem 0.5rem; font-size: 0.8rem; color: var(--c-text);
+        }
+        .input-y2k:focus { outline: 1px solid var(--c-accent-light); border-color: #7090B0; }
+        select.input-y2k { padding: 0.3rem 0.4rem; cursor: pointer; }
+
+        /* ── Alternating rows ──────────────────────────────────────── */
+        .alt-row:nth-child(even) { background: #F0F4FA; }
+        .alt-row:nth-child(odd) { background: #FFFFFF; }
+        .alt-row:hover { background: #E4EDF8 !important; }
+
+        /* ── Status bar (sidebar footer) ───────────────────────────── */
+        .status-bar {
+            background: linear-gradient(180deg, #E8ECF2 0%, #CCD4E0 100%);
+            border: 1px inset #B0B8C4; padding: 0.25rem 0.5rem; font-size: 0.65rem;
+        }
+
+        /* ── Toolbar ───────────────────────────────────────────────── */
+        .toolbar {
+            background: linear-gradient(180deg, #ECF0F6 0%, #D8DDE6 100%);
+            border-bottom: 1px solid var(--c-border);
+            padding: 0.4rem 0.75rem;
+        }
+
+        /* ── Animations ─────────────────────────────────────────────── */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-in { animation: fadeIn 0.2s ease-out; }
+
+        /* ── Window title bar (reusable) ───────────────────────────── */
+        .win-titlebar {
+            background: linear-gradient(180deg, #0A246A 0%, #3A6EA5 40%, #6698D0 80%, #3A6EA5 100%);
+            color: #FFFFFF; font-weight: 700; font-size: 0.75rem;
+            padding: 0.35rem 0.6rem; border-radius: 3px 3px 0 0;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.4);
+            letter-spacing: 0.02em;
+        }
+    </style>
+</head>
+<body class="h-full bg-dd-bg text-dd-text" style="font-size: 13px;">
+    <div class="flex h-full">
+        <!-- Sidebar (XP Luna blue gradient) -->
+        <aside class="w-56 sidebar-gradient flex flex-col flex-shrink-0 border-r border-[#1A3570]">
+            <!-- Logo area -->
+            <div class="px-4 py-3 border-b" style="border-color: var(--sidebar-border);">
+                <a href="/" class="flex items-center gap-2.5 group">
+                    <div class="w-8 h-8 rounded flex items-center justify-center" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); border: 1px solid #CC8800;">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-bold text-white text-sm leading-tight" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">TEE Hub</div>
+                        <div class="text-[10px] leading-tight" style="color: var(--sidebar-text-muted);">Security Escalations</div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Search -->
+            <div class="px-3 py-2">
+                <form action="/search" method="GET">
+                    <div class="relative">
+                        <svg class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style="color: var(--sidebar-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" name="q" placeholder="Search..."
+                            value="{{ request.args.get('q', '') }}"
+                            class="w-full pl-7 pr-3 py-1 text-xs text-[#1A1A2E]"
+                            style="background: #FFFFFF; border: 2px inset #4A6A8A; border-radius: 2px;">
+                        <kbd class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] px-1 py-0.5 rounded hidden sm:block"
+                            style="color: #6080A0; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);">/</kbd>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 px-2 pb-2 space-y-0.5 overflow-y-auto">
+                <div class="px-2 pt-2 pb-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--sidebar-text-muted); text-shadow: 0 1px 1px rgba(0,0,0,0.3);">Navigation</span>
+                </div>
+                <a href="/" class="sidebar-nav-item flex items-center gap-2 px-3 py-1.5 text-[12px] {{ 'active font-bold' if request.path == '/' else '' }}" style="color: var(--sidebar-text);">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="flex-1">Dashboard</span>
+                </a>
+                <a href="/investigations" class="sidebar-nav-item flex items-center gap-2 px-3 py-1.5 text-[12px] {{ 'active font-bold' if request.path.startswith('/investigation') else '' }}" style="color: var(--sidebar-text);">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <span class="flex-1">Investigations</span>
+                    {% if nav_investigation_count %}
+                    <span class="badge badge-purple" style="background: rgba(255,255,255,0.2); color: #FFFFFF; border-color: rgba(255,255,255,0.3);">{{ nav_investigation_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="/archive" class="sidebar-nav-item flex items-center gap-2 px-3 py-1.5 text-[12px] {{ 'active font-bold' if request.path.startswith('/archive') else '' }}" style="color: var(--sidebar-text);">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                    <span class="flex-1">Archive</span>
+                    {% if nav_archive_count %}
+                    <span class="badge badge-dim" style="background: rgba(255,255,255,0.15); color: #D0D8E8; border-color: rgba(255,255,255,0.2);">{{ nav_archive_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="/docs" class="sidebar-nav-item flex items-center gap-2 px-3 py-1.5 text-[12px] {{ 'active font-bold' if request.path.startswith('/doc') else '' }}" style="color: var(--sidebar-text);">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    <span class="flex-1">Docs</span>
+                    {% if nav_doc_count %}
+                    <span class="badge badge-dim" style="background: rgba(255,255,255,0.15); color: #D0D8E8; border-color: rgba(255,255,255,0.2);">{{ nav_doc_count }}</span>
+                    {% endif %}
+                </a>
+            </nav>
+
+            <!-- Footer / Status Bar -->
+            <div class="mx-2 mb-2 flex items-center justify-between" style="background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; padding: 0.3rem 0.5rem;">
+                <div class="flex items-center gap-1.5 text-[10px]" style="color: var(--sidebar-text-muted);">
+                    <div class="w-1.5 h-1.5 rounded-full" style="background: #44DD88;"></div>
+                    <span>Local</span>
+                </div>
+                <button onclick="toggleTheme()" id="theme-toggle"
+                    class="w-6 h-6 rounded flex items-center justify-center"
+                    style="color: var(--sidebar-text-muted);"
+                    title="Toggle light/dark mode">
+                    <svg id="theme-icon-sun" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <svg id="theme-icon-moon" class="w-3.5 h-3.5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto" id="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && !e.metaKey && !e.ctrlKey && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            document.querySelector('aside input[name="q"]').focus();
+        }
+    });
+    </script>
+
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const isLight = html.getAttribute('data-theme') === 'light';
+        if (isLight) {
+            html.removeAttribute('data-theme');
+            localStorage.setItem('tee-theme', 'dark');
+        } else {
+            html.setAttribute('data-theme', 'light');
+            localStorage.setItem('tee-theme', 'light');
+        }
+        updateThemeIcons();
+    }
+    function updateThemeIcons() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const sun = document.getElementById('theme-icon-sun');
+        const moon = document.getElementById('theme-icon-moon');
+        if (sun && moon) {
+            sun.classList.toggle('hidden', isLight);
+            moon.classList.toggle('hidden', !isLight);
+        }
+    }
+    updateThemeIcons();
+    </script>
+</body>
+</html>

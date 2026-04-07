@@ -1,0 +1,31 @@
+# Baseline: APM + Logs only, no security features.
+apm_config:
+  enabled: true
+  apm_non_local_traffic: true
+
+logs_enabled: true
+logs_config:
+  container_collect_all: true
+
+process_config:
+  process_collection:
+    enabled: false
+  container_collection:
+    enabled: false
+
+runtime_security_config:
+  enabled: false
+  activity_dump:
+    enabled: false
+
+compliance_config:
+  enabled: false
+  host_benchmarks:
+    enabled: false
+
+sbom:
+  enabled: false
+  container_image:
+    enabled: false
+  host:
+    enabled: false
