@@ -156,10 +156,20 @@ Post the following message to all three channels and capture each message's perm
 2. `#k9-ask-security-graph-and-prioritization`
 3. `#k9-ask-cspm`
 
-Once all three are sent, post a thread reply to each message linking to the other two:
+If the Slack MCP did not return permalinks for all three messages, stop and warn the user:
+> ⚠️ Could not retrieve permalink for one or more Slack messages. Retrieve them manually from Slack and paste them here before continuing.
+
+Once all three permalinks are confirmed, post a thread reply to each message linking to the other two:
 > FYI, related deletion requests have also been posted in `#<channel-2>` (<permalink>) and `#<channel-3>` (<permalink>)
 
-If the Slack MCP does not return message permalinks, post the thread replies mentioning the channel names only (without deep links).
+Then add a comment to the SCRS JIRA ticket using the Atlassian MCP, listing the 3 permalinks as a checklist so the user can mark each off as the team confirms deletion:
+
+```
+Compliance Monitoring deletion requests posted in Slack. Mark each off when the team confirms deletion:
+[ ] #k9-ask-findings-platform: <permalink-1>
+[ ] #k9-ask-security-graph-and-prioritization: <permalink-2>
+[ ] #k9-ask-cspm: <permalink-3>
+```
 
 ---
 
@@ -198,6 +208,24 @@ Fields:
 Target board: `https://datadoghq.atlassian.net/jira/software/c/projects/K9VULN/boards/8099`
 
 After creating the ticket, confirm the link back to the SCRS ticket was established.
+
+---
+
+## Step 3.5 — Update original ticket status
+
+After all products in Step 3 have been processed, transition the SCRS ticket status based on what actions were taken. Evaluate in priority order:
+
+**Priority 1 — Manual action required → no status change**
+If `applicationSecurity` SQL deletion was needed, OR `codeSecurityIac` was active:
+Do NOT transition the ticket. Note to the user that the ticket status has been left unchanged because manual steps are pending. Proceed to Step 4.
+
+**Priority 2 — Engineering action needed → Engineering Triage**
+Else if any K9VULN ticket(s) were created, OR `complianceMonitoring` Slack messages were sent:
+Transition the SCRS ticket to **Engineering Triage** using the Atlassian MCP (`transitionJiraIssue`). Proceed to Step 4.
+
+**Priority 3 — No action needed → Done**
+Else (only auto-delete products were active, no tickets created and no Slack messages sent):
+Transition the SCRS ticket to **Done** using the Atlassian MCP (`transitionJiraIssue`). Skip Step 4 and proceed directly to Step 5.
 
 ---
 
