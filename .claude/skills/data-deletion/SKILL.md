@@ -175,10 +175,12 @@ Post the following message to all three channels and capture each message's perm
 If the Slack MCP did not return permalinks for all three messages, stop and warn the user:
 > ⚠️ Could not retrieve permalink for one or more Slack messages. Retrieve them manually from Slack and paste them here before continuing.
 
-Once all three permalinks are confirmed, post a thread reply to each message linking to the other two:
+Once all three permalinks are confirmed, post a thread reply to each message linking to the other two and to the original SCRS ticket:
 > FYI, related deletion requests have also been posted in `#<channel-2>` (<permalink>) and `#<channel-3>` (<permalink>)
+>
+> Original deletion request is here: <SCRS_TICKET_URL>
 
-Retain the three permalinks — they will be included in the checklist comment posted in Step 3.5.
+Retain the three permalinks — they will be included in the checklist comment posted in Step 4.
 
 ---
 
@@ -220,23 +222,25 @@ After creating the ticket, confirm the link back to the SCRS ticket was establis
 
 ---
 
-## Step 3.5 — Post checklist comment and update ticket status
+## Step 4 — Post checklist comment and update ticket status
 
 ### Post checklist comment
 
 Post a single comprehensive comment to the SCRS ticket.
+
+Use plain markdown checkbox syntax without bullet-point prefixes (no leading `-`). Jira renders each `[x]` or `[ ]` at the start of a line as a proper checkbox.
 
 **If there are no child orgs**, use a flat format:
 
 ```
 Deletion progress tracker for org `<ORG_ID>`:
 
-- [x] `securityMonitoring` — auto-deletes after 90 days, no action needed
-- [x] `applicationSecurity` — SQL deletion completed
-- [ ] `complianceMonitoring` — #k9-ask-findings-platform: <permalink>
-- [ ] `complianceMonitoring` — #k9-ask-security-graph-and-prioritization: <permalink>
-- [ ] `complianceMonitoring` — #k9-ask-cspm: <permalink>
-- [ ] `codeSecurityScaRuntime` — [K9VULN-XXXXX](<link>) resolved
+[x] `securityMonitoring` — auto-deletes after 90 days, no action needed
+[x] `applicationSecurity` — SQL deletion completed
+[ ] `complianceMonitoring` — #k9-ask-findings-platform: <permalink>
+[ ] `complianceMonitoring` — #k9-ask-security-graph-and-prioritization: <permalink>
+[ ] `complianceMonitoring` — #k9-ask-cspm: <permalink>
+[ ] `codeSecurityScaRuntime` — [K9VULN-XXXXX](<link>) resolved
 ```
 
 **If there are child orgs**, use a two-section format:
@@ -245,18 +249,18 @@ Deletion progress tracker for org `<ORG_ID>`:
 Deletion progress tracker:
 
 **Org <ORG_ID> (<ORG_NAME> — parent):**
-- [x] `securityMonitoring` — auto-deletes after 90 days, no action needed
-- [x] `applicationSecurity` — SQL deletion completed
+[x] `securityMonitoring` — auto-deletes after 90 days, no action needed
+[x] `applicationSecurity` — SQL deletion completed
 
 **Org <CHILD_ORG_ID> (<CHILD_ORG_NAME> — child):**
-- [x] `securityMonitoring` — auto-deletes after 90 days, no action needed
-- [x] `applicationSecurity` — SQL deletion completed
+[x] `securityMonitoring` — auto-deletes after 90 days, no action needed
+[x] `applicationSecurity` — SQL deletion completed
 
 **Shared actions (all orgs):**
-- [ ] `complianceMonitoring` — #k9-ask-findings-platform: <permalink>
-- [ ] `complianceMonitoring` — #k9-ask-security-graph-and-prioritization: <permalink>
-- [ ] `complianceMonitoring` — #k9-ask-cspm: <permalink>
-- [ ] `codeSecurityScaRuntime` — [K9VULN-XXXXX](<link>) resolved
+[ ] `complianceMonitoring` — #k9-ask-findings-platform: <permalink>
+[ ] `complianceMonitoring` — #k9-ask-security-graph-and-prioritization: <permalink>
+[ ] `complianceMonitoring` — #k9-ask-cspm: <permalink>
+[ ] `codeSecurityScaRuntime` — [K9VULN-XXXXX](<link>) resolved
 ```
 
 Rules:
@@ -272,30 +276,33 @@ Evaluate in priority order:
 
 **Priority 1 — Unknown action required → no status change**
 If `codeSecurityIac` was active:
-Do NOT transition the ticket. Note to the user that the ticket status has been left unchanged because the required action is undocumented. Proceed to Step 4.
+Do NOT transition the ticket. Note to the user that the ticket status has been left unchanged because the required action is undocumented. Proceed to Step 5.
 
 **Priority 2 — Engineering action needed → Engineering Triage**
 If any K9VULN ticket(s) were created, OR `complianceMonitoring` Slack messages were sent (regardless of whether `applicationSecurity` SQL deletion was also needed — once confirmed done it no longer blocks transition):
-Transition the SCRS ticket to **Engineering Triage** using the Atlassian MCP (`transitionJiraIssue`). Proceed to Step 4.
+Transition the SCRS ticket to **Engineering Triage** using the Atlassian MCP (`transitionJiraIssue`). Proceed to Step 5.
 
 **Priority 3 — No action needed → Done**
 Else (only auto-delete products were active, no tickets created and no Slack messages sent):
-Transition the SCRS ticket to **Done** using the Atlassian MCP (`transitionJiraIssue`). Skip Step 4 and proceed directly to Step 5.
+Transition the SCRS ticket to **Done** using the Atlassian MCP (`transitionJiraIssue`). Skip Step 5 and proceed directly to Step 6.
+
+**In all cases**, also update the SCRS ticket using `editJiraIssue` to set the Escalation Reason field:
+`customfield_19256: { "id": "28799" }` — `[ACCESS] - Access or Permissions Required`
 
 ---
 
-## Step 4 — Wait for downstream tickets (if applicable)
+## Step 5 — Wait for downstream tickets (if applicable)
 
 If any K9VULN tickets were created, inform the user:
 > "The following linked tickets have been created and must be resolved before closing this ticket: [list with links]. Return to this workflow once all are marked Done."
 
-Wait for the user to confirm all downstream tickets are complete before proceeding to Step 5.
+Wait for the user to confirm all downstream tickets are complete before proceeding to Step 6.
 
-If no K9VULN tickets were created, proceed directly to Step 5.
+If no K9VULN tickets were created, proceed directly to Step 6.
 
 ---
 
-## Step 5 — Document and close
+## Step 6 — Document and close
 
 1. Use the Atlassian MCP to post a comment on the SCRS ticket summarising all actions taken. The comment should include:
    - Which products were activated
