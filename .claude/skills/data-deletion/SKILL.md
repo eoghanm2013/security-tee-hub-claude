@@ -17,9 +17,17 @@ Extract and display the following:
 | Ticket key | — | e.g. SCRS-2037 |
 | Org ID | `customfield_10236` | — |
 | Org Name | `customfield_10237` | — |
-| Region | `customfield_16565` | — |
+| Region | ticket description | Use the **Datacenter** field (e.g., `us1.prod`) — do NOT use `customfield_16565`, it is unreliable |
 | Deletion due date | `customfield_10328` | Parse date with regex from text like `"Contractual due date for deletion: , YYYY-MM-DD"` |
 | logs-admin URL | ticket description | Extract the hyperlink on the word "here" from a line like "Please follow the provided instructions **here**" |
+
+After displaying the table, look for a **Child Orgs** section in the ticket description. Child orgs appear in the format:
+`* [<ORG_ID> | <ORG_NAME>](<supportdog_url>)`
+
+Extract all child org IDs and names and display them clearly, for example:
+> **Child orgs found:** 401640 (Hero - to be deleted)
+
+If no Child Orgs section exists or it is empty, note "No child orgs" and continue.
 
 ---
 
@@ -38,7 +46,15 @@ applicationSecurity	true	3 year(s) ago
 ...
 ```
 
-Once the user pastes the table, parse it and identify all rows where `Activation` is `true`.
+Once the user pastes the table, if child orgs were found in Step 1, for each child org construct and display its K9 activations URL:
+```
+https://logs-admin.<datacenter>.prod.dog/web/#/orgs/<CHILD_ORG_ID>/k9activations
+```
+Ask the user to open each URL, navigate to K9 Activations, and paste the table. Repeat until all child orgs' activations are collected.
+
+Parse all activations. Present the summary **per org**:
+- If all orgs have identical activations, say so and show one combined summary
+- If any org differs, call out the differences explicitly so the user knows which actions apply to which org
 
 Display a clear summary back to the user, for example:
 
@@ -47,7 +63,7 @@ Display a clear summary back to the user, for example:
 - `complianceMonitoring` → [Claude] Posts 3 Slack messages with cross-links
 - `infraVulnerabilityManagement`, `containerVulnerabilityManagement`, `hostVulnerabilityManagement` → [Claude] Creates 1 K9VULN ticket (VM board) if any are active
 - `codeSecurityScaStatic`, `codeSecurityScaRuntime` → [Claude] Creates 1 K9VULN ticket (SCA board) if any are active
-- `codeSecurityIac` → [Manual] Action not yet documented in runbook
+- `codeSecurityIac` → [Claude] Creates 1 K9VULN ticket (IaC board) + posts link to `#k9-iac-secrets-backroom`
 - `runtimeSecurity` → [Auto] No action needed
 - `ciem` → [Auto] No action needed
 - `securityMonitoring` → [Auto] No action needed (data auto-deletes after 90 days)
@@ -90,17 +106,36 @@ Data auto-deletes 90 days after ticket closes (closing happens within 24h of no 
 
 ---
 
-### `codeSecurityIac` — Action unknown
-This product is not covered by the current runbook. Warn the user:
-> ⚠️ `codeSecurityIac` is activated but the required action for this product is not yet documented in this skill. Please handle this manually and update the runbook.
+### `codeSecurityIac` — Create K9VULN ticket (IaC board) + Slack post
+
+Create a ticket in the **K9VULN** project using the Atlassian MCP.
+
+Fields:
+- **Title:** The summary of the SCRS ticket (reuse verbatim)
+- **Work Type:** Task
+- **Components:** Support
+- **Due Date:** deletion due date from Step 1, formatted as `MM/DD/YYYY`
+- **Linked work item:** this ticket "Blocks" `<SCRS_TICKET_URL>`
+- **Description:**
+  > Orgs `<ORG_ID>` [and `<CHILD_ORG_ID>` ...] have requested that all their data be deleted. Please confirm all related data for Code Security IaC has been deleted.
+
+Target board: `https://datadoghq.atlassian.net/jira/software/c/projects/K9VULN/boards/8574`
+
+After creating the ticket, confirm the link back to the SCRS ticket was established.
+
+Then post a single top-level message to `#k9-iac-secrets-backroom` with the K9VULN ticket link and the SCRS ticket link:
+
+> Orgs `<ORG_ID>` [and `<CHILD_ORG_ID>` ...] have requested that all their data be deleted. Please confirm all related data for Code Security IaC has been deleted. Tracking ticket: `<K9VULN_TICKET_URL>`. Original deletion request: `<SCRS_TICKET_URL>`.
+
+Retain the K9VULN ticket link — it will be included in the checklist comment posted in Step 4.
 
 ---
 
 ### `applicationSecurity` — Manual SQL deletion
 
-1. Display the orgstore-prober URL and instruct the user:
+1. Display the orgstore-prober URL and instruct the user. Use the datacenter from the ticket description (e.g., `us1.prod` → `us1`):
    ```
-   https://orgstore-prober.<REGION>.prod.dog/
+   https://orgstore-prober.<DATACENTER>.prod.dog/
    ```
    > "Please open this URL, find the row for ASM, and share the value from the **k8s Cluster** column."
 
@@ -139,7 +174,7 @@ This product is not covered by the current runbook. Warn the user:
 4. Instruct:
    > "Run the kubectl command to connect to the cluster, then run the SQL script. Take a screenshot of the completed output for your records. Confirm here when done."
 
-   Wait for confirmation before continuing.
+   Wait for confirmation, then repeat steps 3–4 for each child org (same kubectl connection, different org ID in the script). Provide each child org's SQL script one at a time, waiting for confirmation between each.
 
 ---
 
@@ -147,9 +182,9 @@ This product is not covered by the current runbook. Warn the user:
 
 If the Slack MCP is not authenticated, stop and tell the user to run `/mcp` and authenticate "claude.ai Slack" first.
 
-Post the following message to all three channels and capture each message's permalink:
+Post the following message to all three channels and capture each message's permalink. Include all org IDs (parent + any child orgs) in the message:
 
-> Org `<ORG_ID>` has requested that all their data be deleted. Please confirm all related data for Compliance Monitoring has been deleted.
+> Orgs `<ORG_ID>` [and `<CHILD_ORG_ID>` ...] have requested that all their data be deleted. Please confirm all related data for Compliance Monitoring has been deleted.
 
 **Channels:**
 1. `#k9-ask-findings-platform`
@@ -159,17 +194,12 @@ Post the following message to all three channels and capture each message's perm
 If the Slack MCP did not return permalinks for all three messages, stop and warn the user:
 > ⚠️ Could not retrieve permalink for one or more Slack messages. Retrieve them manually from Slack and paste them here before continuing.
 
-Once all three permalinks are confirmed, post a thread reply to each message linking to the other two:
+Once all three permalinks are confirmed, post a thread reply to each message linking to the other two and to the original SCRS ticket:
 > FYI, related deletion requests have also been posted in `#<channel-2>` (<permalink>) and `#<channel-3>` (<permalink>)
+>
+> Original deletion request is here: <SCRS_TICKET_URL>
 
-Then add a comment to the SCRS JIRA ticket using the Atlassian MCP, listing the 3 permalinks as a checklist so the user can mark each off as the team confirms deletion:
-
-```
-Compliance Monitoring deletion requests posted in Slack. Mark each off when the team confirms deletion:
-[ ] #k9-ask-findings-platform: <permalink-1>
-[ ] #k9-ask-security-graph-and-prioritization: <permalink-2>
-[ ] #k9-ask-cspm: <permalink-3>
-```
+Retain the three permalinks — they will be included in the checklist comment posted in Step 4.
 
 ---
 
@@ -184,7 +214,7 @@ Fields:
 - **Due Date:** deletion due date from Step 1, formatted as `MM/DD/YYYY`
 - **Linked work item:** this ticket "Blocks" `<SCRS_TICKET_URL>`
 - **Description:**
-  > Org `<ORG_ID>` has requested that all their data be deleted. Please confirm all related data for Vulnerability Management has been deleted.
+  > Orgs `<ORG_ID>` [and `<CHILD_ORG_ID>` ...] have requested that all their data be deleted. Please confirm all related data for Vulnerability Management has been deleted.
 
 Target board: `https://datadoghq.atlassian.net/jira/software/c/projects/K9VULN/boards/6854/backlog`
 
@@ -203,7 +233,7 @@ Fields:
 - **Due Date:** deletion due date from Step 1, formatted as `MM/DD/YYYY`
 - **Linked work item:** this ticket "Blocks" `<SCRS_TICKET_URL>`
 - **Description:**
-  > Org `<ORG_ID>` has requested that all their data be deleted. Please confirm all related data for Code Security SCA has been deleted.
+  > Orgs `<ORG_ID>` [and `<CHILD_ORG_ID>` ...] have requested that all their data be deleted. Please confirm all related data for Code Security SCA has been deleted.
 
 Target board: `https://datadoghq.atlassian.net/jira/software/c/projects/K9VULN/boards/8099`
 
@@ -211,36 +241,85 @@ After creating the ticket, confirm the link back to the SCRS ticket was establis
 
 ---
 
-## Step 3.5 — Update original ticket status
+## Step 4 — Post checklist comment and update ticket status
 
-After all products in Step 3 have been processed, transition the SCRS ticket status based on what actions were taken. Evaluate in priority order:
+### Post checklist comment
 
-**Priority 1 — Manual action required → no status change**
-If `applicationSecurity` SQL deletion was needed, OR `codeSecurityIac` was active:
-Do NOT transition the ticket. Note to the user that the ticket status has been left unchanged because manual steps are pending. Proceed to Step 4.
+Post a single comprehensive comment to the SCRS ticket.
 
-**Priority 2 — Engineering action needed → Engineering Triage**
-Else if any K9VULN ticket(s) were created, OR `complianceMonitoring` Slack messages were sent:
-Transition the SCRS ticket to **Engineering Triage** using the Atlassian MCP (`transitionJiraIssue`). Proceed to Step 4.
+Use plain markdown checkbox syntax without bullet-point prefixes (no leading `-`). Jira renders each `[x]` or `[ ]` at the start of a line as a proper checkbox.
 
-**Priority 3 — No action needed → Done**
+**If there are no child orgs**, use a flat format:
+
+```
+Deletion progress tracker for org `<ORG_ID>`:
+
+[x] `securityMonitoring` — auto-deletes after 90 days, no action needed
+[x] `applicationSecurity` — SQL deletion completed
+[ ] `complianceMonitoring` — #k9-ask-findings-platform: <permalink>
+[ ] `complianceMonitoring` — #k9-ask-security-graph-and-prioritization: <permalink>
+[ ] `complianceMonitoring` — #k9-ask-cspm: <permalink>
+[ ] `codeSecurityScaRuntime` — [K9VULN-XXXXX](<link>) resolved
+[ ] `codeSecurityIac` — [K9VULN-XXXXX](<link>) resolved
+```
+
+**If there are child orgs**, use a two-section format:
+
+```
+Deletion progress tracker:
+
+**Org <ORG_ID> (<ORG_NAME> — parent):**
+[x] `securityMonitoring` — auto-deletes after 90 days, no action needed
+[x] `applicationSecurity` — SQL deletion completed
+
+**Org <CHILD_ORG_ID> (<CHILD_ORG_NAME> — child):**
+[x] `securityMonitoring` — auto-deletes after 90 days, no action needed
+[x] `applicationSecurity` — SQL deletion completed
+
+**Shared actions (all orgs):**
+[ ] `complianceMonitoring` — #k9-ask-findings-platform: <permalink>
+[ ] `complianceMonitoring` — #k9-ask-security-graph-and-prioritization: <permalink>
+[ ] `complianceMonitoring` — #k9-ask-cspm: <permalink>
+[ ] `codeSecurityScaRuntime` — [K9VULN-XXXXX](<link>) resolved
+[ ] `codeSecurityIac` — [K9VULN-XXXXX](<link>) resolved
+```
+
+Rules:
+- Auto-delete products (`securityMonitoring`, `runtimeSecurity`, `ciem`, `codeSecuritySast`, `codeSecurityIast`, `codeSecuritySecret`) get `[x]` with a brief note — include in each org's per-org section
+- `applicationSecurity` gets `[x]` if SQL deletion confirmed done, `[ ]` if still pending — per-org section
+- `complianceMonitoring` Slack threads and K9VULN tickets go in the **Shared actions** section (they cover all orgs in one action)
+- Only include rows for activated products
+- Add one per-org section for each child org found
+
+### Transition ticket status
+
+Evaluate in priority order:
+
+**Priority 1 — Engineering action needed → Engineering Triage**
+If any K9VULN ticket(s) were created, OR `complianceMonitoring` Slack messages were sent (regardless of whether `applicationSecurity` SQL deletion was also needed — once confirmed done it no longer blocks transition):
+Transition the SCRS ticket to **Engineering Triage** using the Atlassian MCP (`transitionJiraIssue`). Proceed to Step 5.
+
+**Priority 2 — No action needed → Done**
 Else (only auto-delete products were active, no tickets created and no Slack messages sent):
-Transition the SCRS ticket to **Done** using the Atlassian MCP (`transitionJiraIssue`). Skip Step 4 and proceed directly to Step 5.
+Transition the SCRS ticket to **Done** using the Atlassian MCP (`transitionJiraIssue`). Skip Step 5 and proceed directly to Step 6.
+
+**In all cases**, also update the SCRS ticket using `editJiraIssue` to set the Escalation Reason field:
+`customfield_19256: { "id": "28799" }` — `[ACCESS] - Access or Permissions Required`
 
 ---
 
-## Step 4 — Wait for downstream tickets (if applicable)
+## Step 5 — Wait for downstream tickets (if applicable)
 
 If any K9VULN tickets were created, inform the user:
 > "The following linked tickets have been created and must be resolved before closing this ticket: [list with links]. Return to this workflow once all are marked Done."
 
-Wait for the user to confirm all downstream tickets are complete before proceeding to Step 5.
+Wait for the user to confirm all downstream tickets are complete before proceeding to Step 6.
 
-If no K9VULN tickets were created, proceed directly to Step 5.
+If no K9VULN tickets were created, proceed directly to Step 6.
 
 ---
 
-## Step 5 — Document and close
+## Step 6 — Document and close
 
 1. Use the Atlassian MCP to post a comment on the SCRS ticket summarising all actions taken. The comment should include:
    - Which products were activated
